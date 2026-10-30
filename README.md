@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/music-player/main/icon-512.png" width="96" alt="Glass Player icon">
+
 # Glass Player
 
 A frosted-glass music player for Android. Play the songs already on your phone inside a liquid
@@ -13,7 +15,7 @@ so what you see here is exactly what runs on the device.
 
 | Now playing | Playlist | Glass options |
 |:---:|:---:|:---:|
-| <img src="screenshots/01-now-playing.webp" width="250"> | <img src="screenshots/02-playlist.webp" width="250"> | <img src="screenshots/03-glass-options.webp" width="250"> |
+| <img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/music-player/main/screenshots/01-now-playing.png" width="250"> | <img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/music-player/main/screenshots/02-playlist.png" width="250"> | <img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/music-player/main/screenshots/03-glass-options.png" width="250"> |
 
 ## Features
 
