@@ -144,7 +144,11 @@ const $=id=>document.getElementById(id);
 const au=$('au'),app=$('app'),sheet=$('sheet'),scrim=$('scrim'),bubble=$('bubble');
 const N={C4:261.6,D4:293.7,E4:329.6,F4:349.2,G4:392,A4:440,B4:493.9,C5:523.3,D5:587.3,E5:659.3};
 const tracks=[];
-let idx=0,wantPlay=false;
+let idx=0;
+let switching=false;   // a new source is loading: ignore the pause event it fires
+let dragging=false;    // the user is scrubbing the seek bar
+let fails=0;           // consecutive tracks that refused to play
+let swapToken=0;       // guards the delayed title swap against fast track skipping
 
 function synth(t){
   const sr=22050,len=sr*24,pcm=new Int16Array(len);
@@ -162,8 +166,38 @@ function synth(t){
   new Int16Array(b,44).set(pcm);
   return URL.createObjectURL(new Blob([b],{type:'audio/wav'}));
 }
+
+const fmt=s=>{
+  if(!isFinite(s)||s<0)return '0:00';
+  s=Math.floor(s);
+  return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+};
+function restart(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls)}
+
+/* lock screen / notification metadata */
+function setSession(t){
+  if(!('mediaSession' in navigator))return;
+  try{
+    if('MediaMetadata' in window){
+      navigator.mediaSession.metadata=new MediaMetadata({title:t.t,artist:t.a,album:'Glass Player'});
+    }
+    navigator.mediaSession.playbackState=au.paused?'paused':'playing';
+  }catch(e){}
+}
+
+function resetSeek(){
+  const sk=$('seek');
+  sk.value=0;sk.style.setProperty('--p','0%');
+  $('cur').textContent='0:00';
+  $('dur').textContent='--:--';
+}
+
 function load(i,autoplay,dir){
-  if(!tracks.length){$('title').textContent='No songs yet';$('artist').textContent='Add songs from your phone';renderList();return}
+  if(!tracks.length){
+    $('title').textContent='No songs yet';
+    $('artist').textContent='Add songs from your phone';
+    resetSeek();renderList();return;
+  }
   idx=(i+tracks.length)%tracks.length;
   const t=tracks[idx];
   const ui=()=>{
@@ -176,57 +210,127 @@ function load(i,autoplay,dir){
   };
   if(dir){
     [$('art'),document.querySelector('.meta')].forEach(el=>{el.style.setProperty('--d',dir);restart(el,'swap')});
-    setTimeout(ui,360);
+    const token=++swapToken;
+    setTimeout(()=>{if(token===swapToken)ui()},360);   /* skip if a newer track took over */
   }else ui();
-  if(!t.src)t.src=synth(t);
-  au.src=t.src;
-  if(autoplay)au.play().catch(()=>{});
-}
-const fmt=s=>isFinite(s)?Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'):'0:00';
-function restart(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls)}
 
+  switching=true;
+  resetSeek();
+  setSession(t);
+  try{
+    if(!t.src)t.src=synth(t);
+    au.src=t.src;
+  }catch(e){
+    switching=false;
+    $('artist').textContent="Can't play this file";
+    return;
+  }
+  if(autoplay){
+    const p=au.play();
+    if(p&&p.then)p.then(()=>{fails=0}).catch(()=>{switching=false});
+  }else{
+    switching=false;
+  }
+  /* the pause event from swapping the source is queued, not immediate */
+  setTimeout(()=>{switching=false},700);
+}
+
+/* transport */
 $('pp').onclick=()=>{if(!tracks.length){$('file').click();return}au.paused?au.play().catch(()=>{}):au.pause()};
-au.onplay=()=>{app.classList.add('playing');restart($('pp'),'bump')};
-au.onpause=()=>{app.classList.remove('playing');restart($('pp'),'bump')};
+$('next').onclick=()=>{if(!tracks.length){$('file').click();return}load(idx+1,!au.paused||au.ended,1)};
+$('prev').onclick=()=>{
+  if(!tracks.length){$('file').click();return}
+  au.currentTime>3?(au.currentTime=0):load(idx-1,!au.paused,-1);
+};
+
+au.onplay=()=>{
+  app.classList.add('playing');
+  restart($('pp'),'bump');
+  if('mediaSession' in navigator){try{navigator.mediaSession.playbackState='playing'}catch(e){}}
+};
+au.onpause=()=>{
+  if(switching)return;
+  app.classList.remove('playing');
+  restart($('pp'),'bump');
+  if('mediaSession' in navigator){try{navigator.mediaSession.playbackState='paused'}catch(e){}}
+};
 au.onended=()=>load(idx+1,true,1);
-$('next').onclick=()=>load(idx+1,!au.paused||au.ended,1);
-$('prev').onclick=()=>au.currentTime>3?(au.currentTime=0):load(idx-1,!au.paused,-1);
+
+au.onerror=()=>{
+  switching=false;
+  fails++;
+  if(tracks.length>1&&fails<tracks.length){
+    load(idx+1,true,1);
+  }else{
+    fails=0;
+    app.classList.remove('playing');
+    $('artist').textContent="Can't play this file";
+  }
+};
+
 au.ontimeupdate=()=>{
-  const p=au.duration?au.currentTime/au.duration*100:0;
-  $('seek').value=p;$('seek').style.setProperty('--p',p+'%');
+  const d=au.duration;
+  if(!dragging){
+    const p=(isFinite(d)&&d>0)?au.currentTime/d*100:0;
+    const sk=$('seek');
+    sk.value=p;sk.style.setProperty('--p',p+'%');
+    $('cur').textContent=fmt(au.currentTime);
+  }
+  if(isFinite(d)&&d>0)$('dur').textContent=fmt(d);
+};
+au.onloadedmetadata=()=>{$('dur').textContent=fmt(au.duration)};
+au.ondurationchange=()=>{if(isFinite(au.duration)&&au.duration>0)$('dur').textContent=fmt(au.duration)};
+
+/* seek bar: don't let timeupdate fight the user's thumb */
+const sk=$('seek');
+sk.oninput=e=>{
+  const v=+e.target.value;
+  e.target.style.setProperty('--p',v+'%');
+  if(isFinite(au.duration)&&au.duration>0)au.currentTime=v/100*au.duration;
   $('cur').textContent=fmt(au.currentTime);
 };
-au.onloadedmetadata=()=>$('dur').textContent=fmt(au.duration);
-$('seek').oninput=e=>{if(au.duration)au.currentTime=e.target.value/100*au.duration;e.target.style.setProperty('--p',e.target.value+'%')};
+['pointerdown','touchstart'].forEach(ev=>sk.addEventListener(ev,()=>{dragging=true},{passive:true}));
+['pointerup','pointercancel','touchend','touchcancel','blur'].forEach(ev=>sk.addEventListener(ev,()=>{dragging=false},{passive:true}));
 
 /* app open / close with bounce */
+let closeTimer=null,closing=false;
 function openApp(){
+  if(closeTimer){clearTimeout(closeTimer);closeTimer=null}   /* reopen mid-collapse: cancel the hide */
+  closing=false;
   bubble.classList.remove('show');
   app.style.display='';
   app.classList.remove('out');restart(app,'in');
 }
-$('closeBtn').onclick=()=>{
+function closeApp(){
+  if(closing)return;
+  closing=true;
   closeSheet();
   app.classList.remove('in');app.classList.add('out');
-  setTimeout(()=>{app.style.display='none';bubble.classList.add('show')},480);
-};
+  closeTimer=setTimeout(()=>{
+    closeTimer=null;closing=false;
+    app.style.display='none';bubble.classList.add('show');
+  },520);
+}
+$('closeBtn').onclick=closeApp;
 bubble.onclick=openApp;
 
 /* options sheet with bounce */
+let sheetTimer=null;
 function openSheet(){
+  if(sheetTimer){clearTimeout(sheetTimer);sheetTimer=null}  /* reopen mid-close: cancel the hide */
   sheet.classList.remove('out');sheet.classList.add('show');restart(sheet,'in');
   scrim.classList.add('on');
 }
 function closeSheet(){
   if(!sheet.classList.contains('show')||sheet.classList.contains('out'))return;
+  if(sheetTimer){clearTimeout(sheetTimer);sheetTimer=null}
   sheet.classList.remove('in');sheet.classList.add('out');scrim.classList.remove('on');
-  setTimeout(()=>sheet.classList.remove('show','out'),420);
+  sheetTimer=setTimeout(()=>{sheetTimer=null;sheet.classList.remove('show','out')},420);
 }
 $('optBtn').onclick=openSheet;$('doneBtn').onclick=closeSheet;scrim.onclick=closeSheet;
 
 /* glass adjust */
 const root=document.documentElement.style;
-const setR=(el,fn)=>{$(el).oninput=e=>fn(+e.target.value);$(el).style.setProperty('--p',(($(el).value-$(el).min)/($(el).max-$(el).min)*100)+'%')};
 function bind(id,fn){const el=$(id);const upd=()=>{el.style.setProperty('--p',((el.value-el.min)/(el.max-el.min)*100)+'%');fn(+el.value)};el.oninput=upd;upd()}
 bind('gl',v=>{root.setProperty('--glass',v/100);$('glV').textContent=v+'%'});
 bind('bl',v=>{root.setProperty('--blur',v+'px');$('blV').textContent=v});
@@ -235,13 +339,31 @@ bind('hu',v=>{root.setProperty('--h',v);$('huV').textContent=v+'°'});
 /* own songs */
 $('addBtn').onclick=()=>$('file').click();
 $('file').onchange=e=>{
-  const fs=[...e.target.files];if(!fs.length)return;
+  const fs=[...e.target.files];
+  e.target.value='';                       /* so picking the same file again still fires */
+  if(!fs.length)return;
+  const seen=new Set(tracks.map(t=>t.t+'|'+t.a));
   const first=tracks.length;
-  fs.forEach(f=>tracks.push({t:f.name.replace(/\.[^.]+$/,''),a:'My library',h:Math.floor(Math.random()*360),src:URL.createObjectURL(f)}));
-  closeSheet();load(first,true,1);
+  fs.forEach(f=>{
+    const name=f.name.replace(/\.[^.]+$/,'');
+    const key=name+'|My library';
+    if(seen.has(key))return;               /* don't stack duplicates */
+    seen.add(key);
+    tracks.push({
+      t:name,
+      a:'My library',
+      h:Math.round((tracks.length*137.508)%360),   /* golden angle: hues stay spread out */
+      src:URL.createObjectURL(f)
+    });
+  });
+  closeSheet();
+  if(tracks.length===first){
+    if(!tracks.length){$('title').textContent='No songs yet';$('artist').textContent='Add songs from your phone';renderList();resetSeek();}
+    return;                                /* everything picked was already in the list */
+  }
+  load(first,true,1);
 };
 
-/* start: bounce open on launch */
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function renderList(){
   if(!tracks.length){$('list').innerHTML='<div class="it" data-add="1"><div class="tt"><b>No songs yet</b><small>Tap here to add songs</small></div></div>';return}
@@ -254,11 +376,24 @@ $('list').onclick=e=>{
   if(i===idx){au.paused?au.play().catch(()=>{}):au.pause();return}
   load(i,true,i>idx?1:-1);
 };
+
+/* Android hardware back: sheet, then player, then let the app close */
+window.__onBack=function(){
+  try{
+    if(sheet.classList.contains('show')&&!sheet.classList.contains('out')){closeSheet();return true}
+    if(app.style.display!=='none'&&!closing){closeApp();return true}
+  }catch(e){}
+  return false;
+};
+
 load(0,false);
 restart(app,'in');
 if('mediaSession' in navigator){
-  navigator.mediaSession.setActionHandler('nexttrack',()=>$('next').click());
-  navigator.mediaSession.setActionHandler('previoustrack',()=>$('prev').click());
+  const bind=(a,fn)=>{try{navigator.mediaSession.setActionHandler(a,fn)}catch(e){}};
+  bind('nexttrack',()=>$('next').click());
+  bind('previoustrack',()=>$('prev').click());
+  bind('play',()=>au.play().catch(()=>{}));
+  bind('pause',()=>au.pause());
 }
 </script>
 </body>
