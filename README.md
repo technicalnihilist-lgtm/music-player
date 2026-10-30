@@ -61,9 +61,41 @@ bash android/build.sh
 To change the UI, edit `source/index.html`, copy it to
 `android/app/src/main/assets/index.html`, and rebuild.
 
+## Changelog
+
+### 1.1 — bug fix release
+
+- **Adding songs works.** The WebView never had a file chooser handler, so tapping *Add songs* did
+  nothing on a device. `MainActivity` now implements `onShowFileChooser` and returns every file you
+  pick, including multi-select.
+- **Hardware back button** now closes the options sheet, then collapses the player to its bubble,
+  and only then leaves the app — instead of quitting from anywhere.
+- **No more art flicker on track change.** Swapping the audio source fires a `pause` event, which
+  was shrinking the album art mid-transition; those events are now ignored while a track loads.
+- **Reopening the player mid-collapse** no longer hides it again a moment later — the pending
+  close timer is cancelled instead of racing the open animation.
+- **Same for the options sheet**: closing and reopening it quickly used to leave it invisible.
+- **Fast skipping no longer shows the wrong song** — the delayed title swap is discarded when a
+  newer track takes over.
+- **The seek bar no longer fights your thumb** — progress updates pause while you drag.
+- **Picking the same files twice no longer duplicates them**, and picking files that are all
+  already in the list no longer restarts playback from the top.
+- **Re-picking a file that was already chosen** works (the input is reset after each pick).
+- **Unplayable files are skipped** instead of silently doing nothing; if every file fails the
+  artist line says so.
+- **Lock-screen metadata** (title, artist) is now published through MediaSession, with play,
+  pause, next and previous handled from the notification.
+- Track hues are now spread with a golden-angle step instead of random values, so two songs rarely
+  end up looking identical.
+- Duration shows `--:--` until the file's length is known instead of a misleading `0:00`.
+
+### 1.0
+
+- First release.
+
 ## Notes
 
-- Package name: `com.glassplayer.app` · version 1.0 · minSdk 24 · targetSdk 34
+- Package name: `com.glassplayer.app` · version 1.1 · minSdk 24 · targetSdk 34
 - The app requests no permissions and has no network access; audio is read only through the
   system file picker you invoke yourself.
 - `source/index.html` also runs in any browser if you want to try the UI without installing.
