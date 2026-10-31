@@ -1,12 +1,13 @@
 package com.glassplayer.app;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -14,7 +15,10 @@ import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
 
+    private static final int REQ_PICK_AUDIO = 1001;
+
     private WebView web;
+    private ValueCallback<Uri[]> pendingFileCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +44,39 @@ public class MainActivity extends Activity {
             s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         }
 
-        web.setWebChromeClient(new WebChromeClient());
+        // The file input in the page only works if we handle the chooser ourselves.
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView view,
+                                             ValueCallback<Uri[]> callback,
+                                             FileChooserParams params) {
+                if (pendingFileCallback != null) {
+                    pendingFileCallback.onReceiveValue(null);
+                }
+                pendingFileCallback = callback;
+
+                Intent intent = null;
+                try {
+                    intent = params.createIntent();
+                } catch (Exception ignored) {
+                }
+                if (intent == null) {
+                    intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("audio/*");
+                }
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                try {
+                    startActivityForResult(
+                            Intent.createChooser(intent, "Select songs"), REQ_PICK_AUDIO);
+                } catch (Exception e) {
+                    pendingFileCallback = null;
+                    return false;
+                }
+                return true;
+            }
+        });
+
         web.setWebViewClient(new WebViewClient());
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
         web.loadUrl("file:///android_asset/index.html");
@@ -52,12 +88,56 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    public void onBackPressed() {
-        if (web != null && web.canGoBack()) {
-            web.goBack();
-        } else {
-            super.onBackPressed();
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQ_PICK_AUDIO) {
+            if (pendingFileCallback == null) {
+                super.onActivityResult(requestCode, resultCode, data);
+                return;
+            }
+            Uri[] results = null;
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                if (data.getClipData() != null) {
+                    int count = data.getClipData().getItemCount();
+                    results = new Uri[count];
+                    for (int i = 0; i < count; i++) {
+                        results[i] = data.getClipData().getItemAt(i).getUri();
+                    }
+                } else if (data.getData() != null) {
+                    results = new Uri[]{data.getData()};
+                }
+            }
+            pendingFileCallback.onReceiveValue(results);
+            pendingFileCallback = null;
+            return;
         }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    /**
+     * Hardware back: let the page close its sheet or collapse the player first.
+     * Only leave the app when the page says it has nothing left to dismiss.
+     */
+    @Override
+    public void onBackPressed() {
+        if (web == null) {
+            super.onBackPressed();
+            return;
+        }
+        web.evaluateJavascript(
+                "(function(){try{return window.__onBack?window.__onBack():false}catch(e){return false}})()",
+                new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String value) {
+                        boolean handled = "true".equals(value);
+                        if (!handled) {
+                            if (web.canGoBack()) {
+                                web.goBack();
+                            } else {
+                                finish();
+                            }
+                        }
+                    }
+                });
     }
 
     @Override
@@ -74,6 +154,10 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (pendingFileCallback != null) {
+            pendingFileCallback.onReceiveValue(null);
+            pendingFileCallback = null;
+        }
         if (web != null) {
             web.loadUrl("about:blank");
             web.destroy();
