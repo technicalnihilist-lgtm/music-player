@@ -14,7 +14,7 @@
 :root[data-theme="light"]{--bg:#dfe6ff;--tx:#12122b;--tx2:rgba(18,18,43,.6);--edge:rgba(255,255,255,.8);--shine:rgba(255,255,255,.95);color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--tx);font-family:-apple-system,"SF Pro Display","Segoe UI",Roboto,sans-serif;overflow:hidden;display:grid;place-items:center;user-select:none;perspective:1400px;perspective-origin:50% 45%}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,"SF Pro Display","Segoe UI",Roboto,sans-serif;overflow:hidden;display:grid;place-items:center;user-select:none}
 .blobs{position:fixed;inset:0;overflow:hidden;filter:hue-rotate(calc((var(--h) - 250) * 1deg));transition:filter 1s}
 .blobs i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.9;animation:float 14s ease-in-out infinite alternate}
 .blobs i:nth-child(1){width:60vmax;height:60vmax;left:-20vmax;top:-15vmax;background:#7b4dff}
@@ -52,7 +52,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 input[type=range]:active::-webkit-slider-thumb{transform:scale(1.35)}
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:#fff}
 .row{display:flex;justify-content:center;align-items:center;gap:26px}
-.ctl{border:0;background:none;color:var(--tx);cursor:pointer;display:grid;place-items:center;transition:transform .45s var(--spring)}
+.ctl{border:0;background:none;color:var(--tx);cursor:pointer;display:grid;place-items:center;min-width:48px;min-height:48px;touch-action:manipulation;transition:transform .45s var(--spring)}
 .ctl svg{width:34px;height:34px}
 .ctl.main{width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.22);border:1px solid var(--edge);box-shadow:inset 0 1.5px 0 var(--shine),0 10px 24px rgba(0,0,0,.3)}
 .ctl.main svg{width:38px;height:38px}
@@ -100,21 +100,21 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
 
 /* ---------- 4D depth ---------- */
-.tilt{position:relative;display:grid;place-items:center;transform-style:preserve-3d;
-  transform:rotateX(calc(var(--my,0) * -8deg * var(--tiltk,1))) rotateY(calc(var(--mx,0) * 11deg * var(--tiltk,1)));
-  will-change:transform}
-.drift{transform-style:preserve-3d;animation:sway 17s ease-in-out infinite alternate}
+.tilt{position:relative;display:grid;place-items:center;
+  transform:perspective(1400px)
+    rotateX(calc(var(--my,0) * -8deg * var(--tiltk,1)))
+    rotateY(calc(var(--mx,0) * 11deg * var(--tiltk,1)))}
+.drift{animation:sway 17s ease-in-out infinite alternate}
 .drift.off{animation:none}
 @keyframes sway{0%{transform:rotateX(0.9deg) rotateY(-1.4deg)}100%{transform:rotateX(-1deg) rotateY(1.5deg)}}
+button,.it,.chip,.pill,.seg button,.sw,.opt{touch-action:manipulation}
+input[type=range]{touch-action:pan-y}
+.filein{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px}
 .tilt::after{content:"";position:absolute;inset:0;border-radius:44px;pointer-events:none;
   background:radial-gradient(58% 44% at var(--lx,50%) var(--ly,30%),rgba(255,255,255,.30),rgba(255,255,255,0) 72%);
   opacity:var(--glow,0);transition:opacity .35s}
 .artwrap{transform:translate3d(calc(var(--mx,0) * 18px * var(--park,1)),calc(var(--my,0) * 18px * var(--park,1)),0)}
-.top{transform:translate3d(calc(var(--mx,0) * 5px * var(--park,1)),calc(var(--my,0) * 5px * var(--park,1)),0)}
 .meta{transform:translate3d(calc(var(--mx,0) * 9px * var(--park,1)),calc(var(--my,0) * 9px * var(--park,1)),0)}
-.seek{transform:translate3d(calc(var(--mx,0) * 7px * var(--park,1)),calc(var(--my,0) * 7px * var(--park,1)),0)}
-.row{transform:translate3d(calc(var(--mx,0) * 15px * var(--park,1)),calc(var(--my,0) * 15px * var(--park,1)),0)}
-.lh,.list{transform:translate3d(calc(var(--mx,0) * 4px * var(--park,1)),calc(var(--my,0) * 4px * var(--park,1)),0)}
 .blobs{transform:translate3d(calc(var(--mx,0) * -30px * var(--park,1)),calc(var(--my,0) * -30px * var(--park,1)),0)}
 @media (prefers-reduced-motion:reduce){
   .tilt,.drift{transform:none!important;animation:none!important}
@@ -196,7 +196,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
     <button class="pill" id="doneBtn">Done</button>
   </div>
   <button class="pill ghost" id="resetBtn">Reset defaults</button>
-  <input type="file" id="file" accept="audio/*" multiple hidden>
+  <input type="file" id="file" class="filein" accept="audio/*" multiple>
 </section>
 
 <audio id="au" preload="auto" playsinline></audio>
@@ -353,6 +353,8 @@ sk.oninput=e=>{
 };
 ['pointerdown','touchstart'].forEach(ev=>sk.addEventListener(ev,()=>{dragging=true},{passive:true}));
 ['pointerup','pointercancel','touchend','touchcancel','blur'].forEach(ev=>sk.addEventListener(ev,()=>{dragging=false},{passive:true}));
+['pointerup','pointercancel','touchend','touchcancel'].forEach(ev=>window.addEventListener(ev,()=>{dragging=false},{passive:true}));
+document.addEventListener('visibilitychange',()=>{dragging=false;if(document.hidden)switching=false;});
 
 /* app open / close with bounce */
 let closeTimer=null,closing=false;
