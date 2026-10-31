@@ -14,7 +14,7 @@
 :root[data-theme="light"]{--bg:#dfe6ff;--tx:#12122b;--tx2:rgba(18,18,43,.6);--edge:rgba(255,255,255,.8);--shine:rgba(255,255,255,.95);color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--tx);font-family:-apple-system,"SF Pro Display","Segoe UI",Roboto,sans-serif;overflow:hidden;display:grid;place-items:center;user-select:none}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,"SF Pro Display","Segoe UI",Roboto,sans-serif;overflow:hidden;display:grid;place-items:center;user-select:none;perspective:1400px;perspective-origin:50% 45%}
 .blobs{position:fixed;inset:0;overflow:hidden;filter:hue-rotate(calc((var(--h) - 250) * 1deg));transition:filter 1s}
 .blobs i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.9;animation:float 14s ease-in-out infinite alternate}
 .blobs i:nth-child(1){width:60vmax;height:60vmax;left:-20vmax;top:-15vmax;background:#7b4dff}
@@ -25,7 +25,7 @@ body{background:var(--bg);color:var(--tx);font-family:-apple-system,"SF Pro Disp
 .glass{position:relative;background:rgba(255,255,255,var(--glass));-webkit-backdrop-filter:blur(var(--blur)) saturate(190%);backdrop-filter:blur(var(--blur)) saturate(190%);border:1px solid var(--edge);box-shadow:inset 0 1.5px 0 var(--shine),inset 0 -1px 0 rgba(255,255,255,.12),inset 0 0 22px rgba(255,255,255,.06),0 24px 60px rgba(0,0,0,.35)}
 .glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(135deg,rgba(255,255,255,.35),rgba(255,255,255,0) 35%,rgba(255,255,255,0) 65%,rgba(255,255,255,.14))}
 
-.app{width:min(92vw,400px);max-height:94vh;overflow-y:auto;scrollbar-width:none;border-radius:44px;padding:20px 22px 26px;display:flex;flex-direction:column;gap:18px;transform-origin:50% 100%}
+.app{width:min(92vw,400px);max-height:94vh;overflow-y:auto;scrollbar-width:none;border-radius:44px;padding:20px 22px 26px;display:flex;flex-direction:column;gap:18px;transform-origin:50% 100%;box-shadow:inset 0 1.5px 0 var(--shine),inset 0 -1px 0 rgba(255,255,255,.12),inset 0 0 22px rgba(255,255,255,.06),calc(var(--shx,0px)) calc(24px + var(--shy,0px)) calc(56px + var(--shb,0px)) rgba(0,0,0,.42)}
 .app::-webkit-scrollbar{display:none}.app>*{flex-shrink:0}
 .app.in{animation:popIn .75s var(--spring) both}
 .app.out{animation:popOut .5s cubic-bezier(.5,-.4,.7,.2) both;pointer-events:none}
@@ -98,18 +98,36 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 .bubble.show{display:grid;animation:popIn .7s var(--spring) both}
 .bubble svg{width:30px;height:30px}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
+
+/* ---------- 4D depth ---------- */
+.tilt{position:relative;display:grid;place-items:center;transform-style:preserve-3d;
+  transform:rotateX(calc(var(--my,0) * -8deg)) rotateY(calc(var(--mx,0) * 11deg));will-change:transform}
+.tilt::after{content:"";position:absolute;inset:0;border-radius:44px;pointer-events:none;
+  background:radial-gradient(58% 44% at var(--lx,50%) var(--ly,30%),rgba(255,255,255,.30),rgba(255,255,255,0) 72%);
+  opacity:var(--glow,0);transition:opacity .35s}
+.artwrap{transform:translate3d(calc(var(--mx,0) * 18px),calc(var(--my,0) * 18px),0)}
+.top{transform:translate3d(calc(var(--mx,0) * 5px),calc(var(--my,0) * 5px),0)}
+.meta{transform:translate3d(calc(var(--mx,0) * 9px),calc(var(--my,0) * 9px),0)}
+.seek{transform:translate3d(calc(var(--mx,0) * 7px),calc(var(--my,0) * 7px),0)}
+.row{transform:translate3d(calc(var(--mx,0) * 15px),calc(var(--my,0) * 15px),0)}
+.lh,.list{transform:translate3d(calc(var(--mx,0) * 4px),calc(var(--my,0) * 4px),0)}
+.blobs{transform:translate3d(calc(var(--mx,0) * -30px),calc(var(--my,0) * -30px),0)}
+@media (prefers-reduced-motion:reduce){
+  .tilt{transform:none!important}
+  .artwrap,.top,.meta,.seek,.row,.lh,.list,.blobs{transform:none!important}
+}
 </style>
 </head>
 <body>
 <div class="blobs"><i></i><i></i><i></i></div>
 
-<main class="app glass" id="app">
+<div class="tilt"><main class="app glass" id="app">
   <div class="top">
     <button class="chip" id="closeBtn" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <b>Now Playing</b>
     <button class="chip" id="optBtn" aria-label="Options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
   </div>
-  <div class="art" id="art"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3v11.6A3.5 3.5 0 1 0 11 18V8h6V3z"/></svg></div>
+  <div class="artwrap"><div class="art" id="art"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3v11.6A3.5 3.5 0 1 0 11 18V8h6V3z"/></svg></div></div>
   <div class="meta"><h2 id="title">—</h2><p id="artist">—</p></div>
   <div class="seek"><input type="range" id="seek" min="0" max="100" step="0.1" value="0"><div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div></div>
   <div class="row">
@@ -119,7 +137,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   </div>
 <div class="lh">Playlist</div>
   <div class="list" id="list"></div>
-</main>
+</main></div>
 
 <div class="bubble glass" id="bubble" aria-label="Open player"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3v11.6A3.5 3.5 0 1 0 11 18V8h6V3z"/></svg></div>
 
@@ -130,6 +148,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   <label class="opt"><span>Transparency <em id="glV">18%</em></span><input type="range" id="gl" min="2" max="50" value="18"></label>
   <label class="opt"><span>Blur <em id="blV">28</em></span><input type="range" id="bl" min="0" max="60" value="28"></label>
   <label class="opt"><span>Color shift <em id="huV">250°</em></span><input type="range" id="hu" min="0" max="360" value="250"></label>
+  <label class="opt"><span>Depth <em id="dpV">60%</em></span><input type="range" id="dp" min="0" max="100" value="60"></label>
   <div class="btns">
     <button class="pill" id="addBtn">Add songs</button>
     <button class="pill" id="doneBtn">Done</button>
@@ -335,6 +354,68 @@ function bind(id,fn){const el=$(id);const upd=()=>{el.style.setProperty('--p',((
 bind('gl',v=>{root.setProperty('--glass',v/100);$('glV').textContent=v+'%'});
 bind('bl',v=>{root.setProperty('--blur',v+'px');$('blV').textContent=v});
 bind('hu',v=>{root.setProperty('--h',v);$('huV').textContent=v+'°'});
+
+/* ---------- 4D depth: tilt, parallax layers and a moving light ---------- */
+const REDUCED=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let depth=0.6;                 // 0 = flat, 1 = full tilt
+const tv={x:0,y:0};            // smoothed tilt
+const tg={x:0,y:0};            // target tilt, -1..1
+let rafId=null,hasGyro=false;
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+
+function paint(){
+  const mx=tv.x*depth,my=tv.y*depth;
+  root.setProperty('--mx',mx.toFixed(4));
+  root.setProperty('--my',my.toFixed(4));
+  root.setProperty('--lx',(50+mx*44)+'%');
+  root.setProperty('--ly',(50+my*44)+'%');
+  root.setProperty('--shx',(mx*-20).toFixed(1)+'px');
+  root.setProperty('--shy',(my*-14).toFixed(1)+'px');
+  root.setProperty('--shb',((Math.abs(mx)+Math.abs(my))*22).toFixed(1)+'px');
+  root.setProperty('--glow',Math.min(1,(Math.abs(mx)+Math.abs(my))*1.1).toFixed(3));
+}
+function tick(){
+  tv.x+=(tg.x-tv.x)*0.14;
+  tv.y+=(tg.y-tv.y)*0.14;
+  paint();
+  rafId=(Math.abs(tg.x-tv.x)>0.0015||Math.abs(tg.y-tv.y)>0.0015)?requestAnimationFrame(tick):null;
+}
+function kick(){if(!rafId)rafId=requestAnimationFrame(tick)}
+
+/* gyroscope first: on a phone this is what makes the card feel physical */
+window.addEventListener('deviceorientation',e=>{
+  if(REDUCED||e.beta==null||e.gamma==null)return;
+  hasGyro=true;
+  tg.y=clamp((e.beta-52)/34,-1,1);
+  tg.x=clamp(e.gamma/34,-1,1);
+  kick();
+},{passive:true});
+
+/* mouse fallback for desktop */
+window.addEventListener('pointermove',e=>{
+  if(REDUCED||hasGyro||e.pointerType==='touch')return;
+  tg.x=clamp((e.clientX/window.innerWidth-0.5)*2,-1,1);
+  tg.y=clamp((e.clientY/window.innerHeight-0.5)*2,-1,1);
+  kick();
+},{passive:true});
+
+/* touch fallback: press the artwork and push the card around */
+const artBox=$('art');
+function touchTilt(e){
+  const t=e.touches&&e.touches[0];if(!t)return;
+  const r=artBox.getBoundingClientRect();
+  if(!r.width||!r.height)return;
+  tg.x=clamp((t.clientX-(r.left+r.width/2))/(r.width/2),-1,1);
+  tg.y=clamp((t.clientY-(r.top+r.height/2))/(r.height/2),-1,1);
+  kick();
+}
+artBox.addEventListener('touchstart',e=>{if(!REDUCED&&!hasGyro)touchTilt(e)},{passive:true});
+artBox.addEventListener('touchmove',e=>{if(!REDUCED&&!hasGyro)touchTilt(e)},{passive:true});
+artBox.addEventListener('touchend',()=>{if(!hasGyro){tg.x=0;tg.y=0;kick()}},{passive:true});
+artBox.addEventListener('touchcancel',()=>{if(!hasGyro){tg.x=0;tg.y=0;kick()}},{passive:true});
+
+bind('dp',v=>{depth=v/100;$('dpV').textContent=v+'%';paint();if(!rafId)requestAnimationFrame(tick)});
+paint();
 
 /* own songs */
 $('addBtn').onclick=()=>$('file').click();
