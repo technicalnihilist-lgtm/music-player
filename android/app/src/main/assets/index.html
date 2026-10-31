@@ -101,27 +101,52 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
 
 /* ---------- 4D depth ---------- */
 .tilt{position:relative;display:grid;place-items:center;transform-style:preserve-3d;
-  transform:rotateX(calc(var(--my,0) * -8deg)) rotateY(calc(var(--mx,0) * 11deg));will-change:transform}
+  transform:rotateX(calc(var(--my,0) * -8deg * var(--tiltk,1))) rotateY(calc(var(--mx,0) * 11deg * var(--tiltk,1)));
+  will-change:transform}
+.drift{transform-style:preserve-3d;animation:sway 17s ease-in-out infinite alternate}
+.drift.off{animation:none}
+@keyframes sway{0%{transform:rotateX(0.9deg) rotateY(-1.4deg)}100%{transform:rotateX(-1deg) rotateY(1.5deg)}}
 .tilt::after{content:"";position:absolute;inset:0;border-radius:44px;pointer-events:none;
   background:radial-gradient(58% 44% at var(--lx,50%) var(--ly,30%),rgba(255,255,255,.30),rgba(255,255,255,0) 72%);
   opacity:var(--glow,0);transition:opacity .35s}
-.artwrap{transform:translate3d(calc(var(--mx,0) * 18px),calc(var(--my,0) * 18px),0)}
-.top{transform:translate3d(calc(var(--mx,0) * 5px),calc(var(--my,0) * 5px),0)}
-.meta{transform:translate3d(calc(var(--mx,0) * 9px),calc(var(--my,0) * 9px),0)}
-.seek{transform:translate3d(calc(var(--mx,0) * 7px),calc(var(--my,0) * 7px),0)}
-.row{transform:translate3d(calc(var(--mx,0) * 15px),calc(var(--my,0) * 15px),0)}
-.lh,.list{transform:translate3d(calc(var(--mx,0) * 4px),calc(var(--my,0) * 4px),0)}
-.blobs{transform:translate3d(calc(var(--mx,0) * -30px),calc(var(--my,0) * -30px),0)}
+.artwrap{transform:translate3d(calc(var(--mx,0) * 18px * var(--park,1)),calc(var(--my,0) * 18px * var(--park,1)),0)}
+.top{transform:translate3d(calc(var(--mx,0) * 5px * var(--park,1)),calc(var(--my,0) * 5px * var(--park,1)),0)}
+.meta{transform:translate3d(calc(var(--mx,0) * 9px * var(--park,1)),calc(var(--my,0) * 9px * var(--park,1)),0)}
+.seek{transform:translate3d(calc(var(--mx,0) * 7px * var(--park,1)),calc(var(--my,0) * 7px * var(--park,1)),0)}
+.row{transform:translate3d(calc(var(--mx,0) * 15px * var(--park,1)),calc(var(--my,0) * 15px * var(--park,1)),0)}
+.lh,.list{transform:translate3d(calc(var(--mx,0) * 4px * var(--park,1)),calc(var(--my,0) * 4px * var(--park,1)),0)}
+.blobs{transform:translate3d(calc(var(--mx,0) * -30px * var(--park,1)),calc(var(--my,0) * -30px * var(--park,1)),0)}
 @media (prefers-reduced-motion:reduce){
-  .tilt{transform:none!important}
+  .tilt,.drift{transform:none!important;animation:none!important}
   .artwrap,.top,.meta,.seek,.row,.lh,.list,.blobs{transform:none!important}
 }
+
+/* ---------- settings sheet ---------- */
+.sheet{max-height:min(88vh,780px);overflow-y:auto;scrollbar-width:none;
+  background:linear-gradient(rgba(8,6,22,.42),rgba(8,6,22,.42)),rgba(255,255,255,var(--glass))}
+.sheet::-webkit-scrollbar{display:none}
+.sec{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--tx2);opacity:.85;margin:6px 0 -6px}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:11px 0;border-radius:18px;border:1px solid var(--edge);background:rgba(255,255,255,.12);
+  color:var(--tx);font:600 13px inherit;font-family:inherit;cursor:pointer;
+  transition:transform .4s var(--spring),background .3s}
+.seg button:active{transform:scale(.94)}
+.seg button.on{background:rgba(255,255,255,.34);box-shadow:inset 0 1px 0 var(--shine)}
+.row2{display:flex;align-items:center;justify-content:space-between;font-size:14px;color:var(--tx2)}
+.row2 em{font-style:normal;font-size:12px;opacity:.65;margin-left:6px}
+.sw{width:52px;height:30px;border-radius:16px;border:1px solid var(--edge);background:rgba(255,255,255,.14);
+  position:relative;cursor:pointer;transition:background .3s;padding:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+  background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .35s var(--spring)}
+.sw[aria-pressed="true"]{background:rgba(255,255,255,.42)}
+.sw[aria-pressed="true"]::after{transform:translateX(22px)}
+.pill.ghost{background:transparent;box-shadow:none;font-size:14px;color:var(--tx2);padding:10px}
 </style>
 </head>
 <body>
 <div class="blobs"><i></i><i></i><i></i></div>
 
-<div class="tilt"><main class="app glass" id="app">
+<div class="tilt"><div class="drift"><main class="app glass" id="app">
   <div class="top">
     <button class="chip" id="closeBtn" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <b>Now Playing</b>
@@ -137,22 +162,40 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radiu
   </div>
 <div class="lh">Playlist</div>
   <div class="list" id="list"></div>
-</main></div>
+</main></div></div>
 
 <div class="bubble glass" id="bubble" aria-label="Open player"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3v11.6A3.5 3.5 0 1 0 11 18V8h6V3z"/></svg></div>
 
 <div class="scrim" id="scrim"></div>
 <section class="sheet glass" id="sheet">
   <div class="grab"></div>
-  <h3>Glass options</h3>
+  <h3>Settings</h3>
+
+  <div class="sec">Glass</div>
   <label class="opt"><span>Transparency <em id="glV">18%</em></span><input type="range" id="gl" min="2" max="50" value="18"></label>
   <label class="opt"><span>Blur <em id="blV">28</em></span><input type="range" id="bl" min="0" max="60" value="28"></label>
-  <label class="opt"><span>Color shift <em id="huV">250°</em></span><input type="range" id="hu" min="0" max="360" value="250"></label>
+  <label class="opt"><span>Colour shift <em id="huV">250°</em></span><input type="range" id="hu" min="0" max="360" value="250"></label>
+
+  <div class="sec">4D depth</div>
   <label class="opt"><span>Depth <em id="dpV">60%</em></span><input type="range" id="dp" min="0" max="100" value="60"></label>
+  <label class="opt"><span>Tilt <em id="tlV">100%</em></span><input type="range" id="tl" min="0" max="150" value="100"></label>
+  <label class="opt"><span>Parallax <em id="prV">100%</em></span><input type="range" id="pr" min="0" max="200" value="100"></label>
+  <label class="opt"><span>Light <em id="gvV">100%</em></span><input type="range" id="gv" min="0" max="200" value="100"></label>
+  <label class="opt"><span>Shadow <em id="sdV">100%</em></span><input type="range" id="sd" min="0" max="200" value="100"></label>
+
+  <div class="sec">Motion</div>
+  <div class="seg" id="mot">
+    <button data-m="auto" class="on">Auto</button>
+    <button data-m="touch">Touch</button>
+    <button data-m="off">Off</button>
+  </div>
+  <div class="row2"><span>Idle drift <em>slow sway</em></span><button class="sw" id="driftBtn" aria-pressed="true" aria-label="Idle drift"></button></div>
+
   <div class="btns">
     <button class="pill" id="addBtn">Add songs</button>
     <button class="pill" id="doneBtn">Done</button>
   </div>
+  <button class="pill ghost" id="resetBtn">Reset defaults</button>
   <input type="file" id="file" accept="audio/*" multiple hidden>
 </section>
 
@@ -348,32 +391,96 @@ function closeSheet(){
 }
 $('optBtn').onclick=openSheet;$('doneBtn').onclick=closeSheet;scrim.onclick=closeSheet;
 
-/* glass adjust */
+/* ---------- settings: glass + 4D depth, persisted ---------- */
 const root=document.documentElement.style;
-function bind(id,fn){const el=$(id);const upd=()=>{el.style.setProperty('--p',((el.value-el.min)/(el.max-el.min)*100)+'%');fn(+el.value)};el.oninput=upd;upd()}
-bind('gl',v=>{root.setProperty('--glass',v/100);$('glV').textContent=v+'%'});
-bind('bl',v=>{root.setProperty('--blur',v+'px');$('blV').textContent=v});
-bind('hu',v=>{root.setProperty('--h',v);$('huV').textContent=v+'°'});
+const DEF={glass:18,blur:28,depth:60,tilt:100,par:100,glow:100,shadow:100,drift:1,motion:'auto'};
+let S=Object.assign({},DEF);
+try{
+  const raw=localStorage.getItem('glass.settings.v1');
+  if(raw){const o=JSON.parse(raw);Object.keys(DEF).forEach(k=>{if(o[k]!==undefined)S[k]=o[k]})}
+}catch(e){}
 
-/* ---------- 4D depth: tilt, parallax layers and a moving light ---------- */
+function saveS(){try{localStorage.setItem('glass.settings.v1',JSON.stringify(S))}catch(e){}}
+
 const REDUCED=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-let depth=0.6;                 // 0 = flat, 1 = full tilt
+const motionOff=()=>REDUCED||S.motion==='off';
+
+const driftEl=document.querySelector('.drift');
+const driftBtn=$('driftBtn');
+
+function paint(){
+  const d=S.depth/100;
+  const mx=tv.x*d,my=tv.y*d;
+  root.setProperty('--mx',mx.toFixed(4));
+  root.setProperty('--my',my.toFixed(4));
+  root.setProperty('--lx',(50+mx*44)+'%');
+  root.setProperty('--ly',(50+my*44)+'%');
+  const sk=S.shadow/100,gk=S.glow/100;
+  root.setProperty('--shx',(mx*-20*sk).toFixed(1)+'px');
+  root.setProperty('--shy',(my*-14*sk).toFixed(1)+'px');
+  root.setProperty('--shb',((Math.abs(mx)+Math.abs(my))*22*sk).toFixed(1)+'px');
+  root.setProperty('--glow',(Math.min(1,(Math.abs(mx)+Math.abs(my))*1.1)*gk).toFixed(3));
+}
+
+function applyS(){
+  root.setProperty('--glass',S.glass/100);
+  root.setProperty('--blur',S.blur+'px');
+  root.setProperty('--tiltk',(S.tilt/100).toFixed(3));
+  root.setProperty('--park',(S.par/100).toFixed(3));
+  if(driftEl)driftEl.classList.toggle('off',!S.drift);
+  if(driftBtn)driftBtn.setAttribute('aria-pressed',S.drift?'true':'false');
+  const seg=$('mot');
+  if(seg)[...seg.querySelectorAll('[data-m]')].forEach(b=>b.classList.toggle('on',b.dataset.m===S.motion));
+  if(motionOff()){tg.x=0;tg.y=0;kick()}
+  paint();
+}
+
+const SLIDERS=[['gl','glass','%'],['bl','blur',''],['dp','depth','%'],['tl','tilt','%'],
+               ['pr','par','%'],['gv','glow','%'],['sd','shadow','%']];
+function syncSlider(id,key,suf){
+  const el=$(id);if(!el)return;
+  el.value=S[key];
+  el.style.setProperty('--p',((S[key]-el.min)/(el.max-el.min)*100)+'%');
+  $(id+'V').textContent=S[key]+suf;
+}
+SLIDERS.forEach(([id,key,suf])=>{
+  const el=$(id);if(!el)return;
+  syncSlider(id,key,suf);
+  el.oninput=()=>{
+    S[key]=+el.value;
+    el.style.setProperty('--p',((el.value-el.min)/(el.max-el.min)*100)+'%');
+    $(id+'V').textContent=el.value+suf;
+    applyS();saveS();
+  };
+});
+
+/* colour shift stays tied to the current track */
+const huEl=$('hu');
+if(huEl){
+  huEl.oninput=()=>{
+    huEl.style.setProperty('--p',(huEl.value/360*100)+'%');
+    root.setProperty('--h',huEl.value);
+    $('huV').textContent=huEl.value+'°';
+  };
+}
+
+if($('mot'))$('mot').onclick=e=>{
+  const b=e.target.closest('[data-m]');if(!b)return;
+  S.motion=b.dataset.m;applyS();saveS();
+};
+if(driftBtn)driftBtn.onclick=()=>{S.drift=S.drift?0:1;applyS();saveS()};
+if($('resetBtn'))$('resetBtn').onclick=()=>{
+  S=Object.assign({},DEF);
+  SLIDERS.forEach(([id,key,suf])=>syncSlider(id,key,suf));
+  applyS();saveS();
+};
+
+/* ---------- 4D depth engine ---------- */
 const tv={x:0,y:0};            // smoothed tilt
 const tg={x:0,y:0};            // target tilt, -1..1
 let rafId=null,hasGyro=false;
 const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
 
-function paint(){
-  const mx=tv.x*depth,my=tv.y*depth;
-  root.setProperty('--mx',mx.toFixed(4));
-  root.setProperty('--my',my.toFixed(4));
-  root.setProperty('--lx',(50+mx*44)+'%');
-  root.setProperty('--ly',(50+my*44)+'%');
-  root.setProperty('--shx',(mx*-20).toFixed(1)+'px');
-  root.setProperty('--shy',(my*-14).toFixed(1)+'px');
-  root.setProperty('--shb',((Math.abs(mx)+Math.abs(my))*22).toFixed(1)+'px');
-  root.setProperty('--glow',Math.min(1,(Math.abs(mx)+Math.abs(my))*1.1).toFixed(3));
-}
 function tick(){
   tv.x+=(tg.x-tv.x)*0.14;
   tv.y+=(tg.y-tv.y)*0.14;
@@ -382,24 +489,25 @@ function tick(){
 }
 function kick(){if(!rafId)rafId=requestAnimationFrame(tick)}
 
-/* gyroscope first: on a phone this is what makes the card feel physical */
+/* gyroscope: the source that makes the card feel physical */
 window.addEventListener('deviceorientation',e=>{
-  if(REDUCED||e.beta==null||e.gamma==null)return;
+  if(motionOff()||S.motion==='touch'||e.beta==null||e.gamma==null)return;
   hasGyro=true;
   tg.y=clamp((e.beta-52)/34,-1,1);
   tg.x=clamp(e.gamma/34,-1,1);
   kick();
 },{passive:true});
 
-/* mouse fallback for desktop */
+/* mouse, for desktop */
 window.addEventListener('pointermove',e=>{
-  if(REDUCED||hasGyro||e.pointerType==='touch')return;
+  if(motionOff()||e.pointerType==='touch')return;
+  if(S.motion==='auto'&&hasGyro)return;
   tg.x=clamp((e.clientX/window.innerWidth-0.5)*2,-1,1);
   tg.y=clamp((e.clientY/window.innerHeight-0.5)*2,-1,1);
   kick();
 },{passive:true});
 
-/* touch fallback: press the artwork and push the card around */
+/* touch: press the artwork and push the card around */
 const artBox=$('art');
 function touchTilt(e){
   const t=e.touches&&e.touches[0];if(!t)return;
@@ -409,13 +517,16 @@ function touchTilt(e){
   tg.y=clamp((t.clientY-(r.top+r.height/2))/(r.height/2),-1,1);
   kick();
 }
-artBox.addEventListener('touchstart',e=>{if(!REDUCED&&!hasGyro)touchTilt(e)},{passive:true});
-artBox.addEventListener('touchmove',e=>{if(!REDUCED&&!hasGyro)touchTilt(e)},{passive:true});
-artBox.addEventListener('touchend',()=>{if(!hasGyro){tg.x=0;tg.y=0;kick()}},{passive:true});
-artBox.addEventListener('touchcancel',()=>{if(!hasGyro){tg.x=0;tg.y=0;kick()}},{passive:true});
+if(artBox){
+  const tStart=e=>{if(motionOff())return;if(S.motion==='auto'&&hasGyro)return;touchTilt(e)};
+  const tEnd=()=>{if(!(S.motion==='auto'&&hasGyro)){tg.x=0;tg.y=0;kick()}};
+  artBox.addEventListener('touchstart',tStart,{passive:true});
+  artBox.addEventListener('touchmove',tStart,{passive:true});
+  artBox.addEventListener('touchend',tEnd,{passive:true});
+  artBox.addEventListener('touchcancel',tEnd,{passive:true});
+}
 
-bind('dp',v=>{depth=v/100;$('dpV').textContent=v+'%';paint();if(!rafId)requestAnimationFrame(tick)});
-paint();
+applyS();
 
 /* own songs */
 $('addBtn').onclick=()=>$('file').click();
