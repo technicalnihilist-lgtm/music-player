@@ -13,9 +13,13 @@ so what you see here is exactly what runs on the device.
 
 ## Screenshots
 
-| Now playing | Playlist | Glass options |
+| Now playing | Playlist | Settings |
 |:---:|:---:|:---:|
 | <img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/iOS-music/main/screenshots/01-now-playing.png" width="250"> | <img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/iOS-music/main/screenshots/02-playlist.png" width="250"> | <img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/iOS-music/main/screenshots/03-glass-options.png" width="250"> |
+
+**4D depth** — the card tilts with the device while the layers drift at different rates:
+
+<img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/iOS-music/main/screenshots/04-depth.png" width="250">
 
 ## Features
 
@@ -28,7 +32,14 @@ so what you see here is exactly what runs on the device.
 - **Spring animations** — the player pops in from the bottom, collapses into a floating bubble on
   close, and the album art wipes sideways with a blur when you change track.
 - **Playlist** — tap a row to jump to a track, the current row shows an animated equaliser.
-- **Glass options sheet** — drag transparency, blur radius and colour shift with live preview.
+- **4D depth** — the card behaves like a physical object. It tilts with the phone's gyroscope
+  (or with your finger on the artwork), the art, title, transport and playlist slide at different
+  rates, the drop shadow swings to the opposite side, and a specular highlight travels across the
+  glass as you move. It also sways gently on its own when you leave it alone.
+- **A settings panel for all of it** — depth, tilt range, parallax, light and shadow are each
+  adjustable with live preview, alongside a Motion switch (Auto / Touch / Off) and an idle-drift
+  toggle. Transparency, blur and colour shift live there too, and every setting is remembered
+  across launches.
 - **Light and dark** — follows the system theme, and the dark theme is the signature look.
 
 ## Install
@@ -65,6 +76,32 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Changelog
 
+### 1.3 — settings release
+
+- **A full settings panel** replaces the three-slider options sheet: Glass (transparency, blur,
+  colour shift) and 4D depth (depth, tilt, parallax, light, shadow), each with its own slider and
+  live preview.
+- **Motion switch** — *Auto* uses the gyroscope when the device has one, *Touch* ignores sensors
+  and tilts only while you drag the artwork, *Off* disables motion entirely.
+- **Idle drift** — the card sways slowly on its own, so the depth is visible even when the phone is
+  lying still. Toggleable, and it runs as a CSS animation rather than a JS loop, so it costs
+  nothing to leave on.
+- **Settings persist** — everything is saved to local storage and restored on the next launch.
+  *Reset defaults* puts it all back.
+- The settings sheet got a darker glass tint so the labels stay readable over a bright card.
+
+### 1.2 — depth release
+
+- **4D depth effect.** The card is a 3D stage: it rotates up to 8° / 11° on two axes inside a
+  1400px perspective, driven by the gyroscope, by the mouse on desktop, or by dragging a finger
+  across the artwork.
+- **Parallax layers.** Artwork, title, seek bar, transport, playlist and the background blobs each
+  travel a different distance, so the card reads as stacked panes. The blobs move against the tilt.
+- **Light and shadow react.** A specular highlight tracks the tilt across the glass and the drop
+  shadow swings to the opposite side and lengthens.
+- Motion is smoothed in a single `requestAnimationFrame` loop that stops as soon as the tilt
+  settles, and the effect is disabled when the system asks for reduced motion.
+
 ### 1.1 — bug fix release
 
 - **Adding songs works.** The WebView never had a file chooser handler, so tapping *Add songs* did
@@ -97,7 +134,7 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Notes
 
-- Package name: `com.glassplayer.app` · version 1.1 · minSdk 24 · targetSdk 34
+- Package name: `com.glassplayer.app` · version 1.3 · minSdk 24 · targetSdk 34
 - The app requests no permissions and has no network access; audio is read only through the
   system file picker you invoke yourself.
 - `source/index.html` also runs in any browser if you want to try the UI without installing.
