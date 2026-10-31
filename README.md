@@ -76,6 +76,27 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Changelog
 
+### 1.4 — touch fix
+
+- **Taps no longer miss.** The 3D tilt was applied through a `perspective` on `<body>`, which turned
+  every fixed-position element — the settings sheet, the dimming scrim and the floating bubble —
+  into a 3D-transformed containing block. Hit-testing against those was unreliable, which is why
+  the sheet sometimes ignored taps. The perspective now lives inside the card's own transform, so
+  nothing outside it is affected.
+- **Tap targets stopped moving.** The artwork, title and background still parallax, but the close
+  and options chips, the seek bar, the transport buttons and the playlist rows no longer shift
+  under your finger while the card tilts.
+- **Bigger hit areas.** Previous/next were 34px buttons; every control is now at least 48px, the
+  minimum comfortable touch target.
+- **No more 300ms tap delay** — `touch-action: manipulation` on every button, row and chip.
+- **The file picker is reliable.** The hidden `<input type=file>` used the `hidden` attribute,
+  which some WebViews refuse to open programmatically; it is now visually hidden but still a real
+  element.
+- **The seek bar can no longer get stuck.** If a touch ended outside the slider, the drag flag
+  stayed set and progress stopped updating; the flag is now released from the window as well.
+- Flattened the 3D layers (`preserve-3d` and `will-change` removed) for stabler hit-testing in the
+  Android WebView.
+
 ### 1.3 — settings release
 
 - **A full settings panel** replaces the three-slider options sheet: Glass (transparency, blur,
@@ -134,7 +155,7 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Notes
 
-- Package name: `com.glassplayer.app` · version 1.3 · minSdk 24 · targetSdk 34
+- Package name: `com.glassplayer.app` · version 1.4 · minSdk 24 · targetSdk 34
 - The app requests no permissions and has no network access; audio is read only through the
   system file picker you invoke yourself.
 - `source/index.html` also runs in any browser if you want to try the UI without installing.
