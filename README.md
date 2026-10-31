@@ -17,8 +17,16 @@ so what you see here is exactly what runs on the device.
 |:---:|:---:|:---:|
 | <img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/music-player/main/screenshots/01-now-playing.png" width="250"> | <img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/music-player/main/screenshots/02-playlist.png" width="250"> | <img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/music-player/main/screenshots/03-glass-options.png" width="250"> |
 
+**4D depth** — the card tilts with the device while the layers drift at different rates:
+
+<img src="https://raw.githubusercontent.com/technicalnihilist-lgtm/music-player/main/screenshots/04-depth.png" width="250">
+
 ## Features
 
+- **4D depth** — the card behaves like a physical object. It tilts with the phone's gyroscope
+  (or with your finger on the artwork), the art, title, transport and playlist slide at different
+  rates, the drop shadow swings to the opposite side, and a specular highlight travels across the
+  glass as you move. A Depth slider scales the whole thing from flat to full.
 - **Liquid glass card** — layered translucency, 28px backdrop blur, saturate boost, inset
   highlights and a diagonal sheen, all sitting on three drifting colour blobs.
 - **Colour follows the song** — every track carries a hue; the album art, the blob field and the
@@ -65,6 +73,20 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Changelog
 
+### 1.2 — depth release
+
+- **4D depth effect.** The card is now a 3D stage: it rotates up to 8° / 11° on two axes with a
+  1400px perspective, driven by the device gyroscope, by the mouse on desktop, or by dragging a
+  finger across the artwork on a phone without a gyro.
+- **Parallax layers.** Artwork, title block, seek bar, transport, playlist and the background
+  blobs each travel a different distance, so the card reads as stacked panes rather than a flat
+  panel. The blobs move against the tilt for extra separation.
+- **Light and shadow react.** A specular highlight tracks the tilt across the glass and the drop
+  shadow swings to the opposite side and lengthens, which is what sells the depth.
+- **Depth slider** in the options sheet, from 0% (completely flat) to 100%, with live preview.
+- Motion is smoothed in a single `requestAnimationFrame` loop that stops as soon as the tilt
+  settles, and the whole effect is disabled when the system asks for reduced motion.
+
 ### 1.1 — bug fix release
 
 - **Adding songs works.** The WebView never had a file chooser handler, so tapping *Add songs* did
@@ -97,7 +119,7 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Notes
 
-- Package name: `com.glassplayer.app` · version 1.1 · minSdk 24 · targetSdk 34
+- Package name: `com.glassplayer.app` · version 1.2 · minSdk 24 · targetSdk 34
 - The app requests no permissions and has no network access; audio is read only through the
   system file picker you invoke yourself.
 - `source/index.html` also runs in any browser if you want to try the UI without installing.
