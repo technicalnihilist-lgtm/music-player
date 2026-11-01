@@ -76,6 +76,10 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Changelog
 
+### 1.6 — seek bar write budget
+
+- `timeupdate` wrote four DOM values on every audio tick even when nothing had changed; it now skips the write when the rounded value is unchanged, cutting DOM writes per tick from about three to one with identical output.
+
 ### 1.5 — playlist rendering
 
 - The playlist rebuilt its entire markup on every track change. It now reuses the existing rows
@@ -165,7 +169,7 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Notes
 
-- Package name: `com.glassplayer.app` · version 1.5 · minSdk 24 · targetSdk 34
+- Package name: `com.glassplayer.app` · version 1.6 · minSdk 24 · targetSdk 34
 - The app requests no permissions and has no network access; audio is read only through the
   system file picker you invoke yourself.
 - `source/index.html` also runs in any browser if you want to try the UI without installing.

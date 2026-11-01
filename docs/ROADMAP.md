@@ -11,7 +11,7 @@ the symptom is. Do not add "refactor everything" style entries.
 
 - [x] 1. Playlist rebuilt its whole innerHTML on every track change — reuse the rows and only move
   the `cur` class. *(1.5)*
-- [ ] 2. `timeupdate` writes four DOM values on every audio tick (~4/s). Skip the write when the
+- [x] 2. `timeupdate` writes four DOM values on every audio tick (~4/s). Skip the write when the
   rounded value has not changed.
 - [ ] 3. `restart()` forces a synchronous reflow with `void el.offsetWidth` on every call. Batch
   the class toggle into a `requestAnimationFrame` instead.
