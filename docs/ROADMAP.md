@@ -13,8 +13,11 @@ the symptom is. Do not add "refactor everything" style entries.
   the `cur` class. *(1.5)*
 - [x] 2. `timeupdate` writes four DOM values on every audio tick (~4/s). Skip the write when the
   rounded value has not changed.
-- [ ] 3. `restart()` forces a synchronous reflow with `void el.offsetWidth` on every call. Batch
-  the class toggle into a `requestAnimationFrame` instead.
+- [x] 3. `restart()` forces a synchronous reflow with `void el.offsetWidth` on every call. Batch
+  the class toggle into a `requestAnimationFrame` instead. *(1.7)* — done as a style flush
+  (`getComputedStyle(el).animationName`) rather than a rAF: a single rAF runs before the frame's
+  style recalc, so the removal is never observed and the animation does not restart, and rAF is
+  paused while the page is hidden, which would leave the class off during background playback.
 - [ ] 4. `touchTilt()` calls `getBoundingClientRect()` on every `touchmove`. Measure once at
   `touchstart` and reuse it for the gesture.
 - [ ] 5. Settings are written to `localStorage` on every slider `input` event, including during a
