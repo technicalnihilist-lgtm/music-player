@@ -76,6 +76,10 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Changelog
 
+### 1.8 — one box read per tilt gesture
+
+- `touchTilt()` read the artwork's `getBoundingClientRect()` on every `touchmove`, forcing a synchronous layout on each frame of the drag; the box is now measured once at `touchstart` and reused for the rest of the gesture, dropping the layout reads per gesture from one per move to one.
+
 ### 1.7 — animation restart without a forced reflow
 
 - `restart()` re-triggered every CSS animation by reading `offsetWidth`, which forces a synchronous layout on each tap. It now flushes styles only (`getComputedStyle(el).animationName`) before re-adding the class, so the engine still sees the removal and the animation restarts exactly as before, minus the layout. A `requestAnimationFrame` toggle was rejected: a single rAF runs before the frame's style recalc so the animation would not restart, and rAF is paused while the page is hidden, which would drop the class during background playback.

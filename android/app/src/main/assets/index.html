@@ -523,23 +523,41 @@ window.addEventListener('pointermove',e=>{
   kick();
 },{passive:true});
 
-/* touch: press the artwork and push the card around */
+/* touch: press the artwork and push the card around.
+   The box is measured once per gesture at touchstart and the rect reused for every move:
+   reading it inside touchmove forced a synchronous layout on each frame of the drag.
+   The cache is dropped whenever the card can have moved under the finger. */
 const artBox=$('art');
-function touchTilt(e){
-  const t=e.touches&&e.touches[0];if(!t)return;
+let tiltRect=null;
+function measureTilt(){
   const r=artBox.getBoundingClientRect();
-  if(!r.width||!r.height)return;
+  tiltRect=(r.width&&r.height)?r:null;
+  return tiltRect;
+}
+function touchTilt(e,r){
+  const t=e.touches&&e.touches[0];if(!t)return;
+  r=r||measureTilt();                     /* no cached box (move without start): measure once */
+  if(!r||!r.width||!r.height)return;
   tg.x=clamp((t.clientX-(r.left+r.width/2))/(r.width/2),-1,1);
   tg.y=clamp((t.clientY-(r.top+r.height/2))/(r.height/2),-1,1);
   kick();
 }
 if(artBox){
-  const tStart=e=>{if(motionOff())return;if(S.motion==='auto'&&hasGyro)return;touchTilt(e)};
-  const tEnd=()=>{if(!(S.motion==='auto'&&hasGyro)){tg.x=0;tg.y=0;kick()}};
+  const canTilt=()=>!motionOff()&&!(S.motion==='auto'&&hasGyro);
+  const tStart=e=>{if(!canTilt())return;touchTilt(e,measureTilt())};
+  const tMove=e=>{if(!canTilt())return;touchTilt(e,tiltRect)};
+  const tEnd=()=>{
+    tiltRect=null;
+    if(!(S.motion==='auto'&&hasGyro)){tg.x=0;tg.y=0;kick()}
+  };
+  const tDrop=()=>{tiltRect=null};
   artBox.addEventListener('touchstart',tStart,{passive:true});
-  artBox.addEventListener('touchmove',tStart,{passive:true});
+  artBox.addEventListener('touchmove',tMove,{passive:true});
   artBox.addEventListener('touchend',tEnd,{passive:true});
   artBox.addEventListener('touchcancel',tEnd,{passive:true});
+  window.addEventListener('scroll',tDrop,{passive:true,capture:true});
+  window.addEventListener('resize',tDrop,{passive:true});
+  window.addEventListener('orientationchange',tDrop,{passive:true});
 }
 
 applyS();

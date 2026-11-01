@@ -18,8 +18,9 @@ the symptom is. Do not add "refactor everything" style entries.
   (`getComputedStyle(el).animationName`) rather than a rAF: a single rAF runs before the frame's
   style recalc, so the removal is never observed and the animation does not restart, and rAF is
   paused while the page is hidden, which would leave the class off during background playback.
-- [ ] 4. `touchTilt()` calls `getBoundingClientRect()` on every `touchmove`. Measure once at
-  `touchstart` and reuse it for the gesture.
+- [x] 4. `touchTilt()` calls `getBoundingClientRect()` on every `touchmove`. Measure once at
+  `touchstart` and reuse it for the gesture. *(1.8)* — the cached box is dropped on touch end,
+  scroll, resize and rotation, so a card that moves under the finger is still measured correctly.
 - [ ] 5. Settings are written to `localStorage` on every slider `input` event, including during a
   drag. Debounce the write to ~200 ms.
 - [ ] 6. The blob animation keeps running while the player is collapsed to the bubble and while the
