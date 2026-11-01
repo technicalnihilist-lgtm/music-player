@@ -559,9 +559,27 @@ $('file').onchange=e=>{
 };
 
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function renderList(){
-  if(!tracks.length){$('list').innerHTML='<div class="it" data-add="1"><div class="tt"><b>No songs yet</b><small>Tap here to add songs</small></div></div>';return}
-  $('list').innerHTML=tracks.map((t,i)=>`<div class="it${i===idx?' cur':''}" data-i="${i}"><div class="th" style="--ah:${t.h}"></div><div class="tt"><b>${esc(t.t)}</b><small>${esc(t.a)}</small></div><div class="eq"><i></i><i></i><i></i></div></div>`).join('');
+let listCount=-1;
+function renderList(rebuild){
+  const list=$('list');
+  if(!tracks.length){
+    if(rebuild||listCount!==0){
+      list.innerHTML='<div class="it" data-add="1"><div class="tt"><b>No songs yet</b><small>Tap here to add songs</small></div></div>';
+      listCount=0;
+    }
+    return;
+  }
+  /* rebuild only when the set of songs changed; a track change just moves the highlight */
+  if(rebuild||listCount!==tracks.length||list.children.length!==tracks.length){
+    list.innerHTML=tracks.map((t,i)=>`<div class="it${i===idx?' cur':''}" data-i="${i}"><div class="th" style="--ah:${t.h}"></div><div class="tt"><b>${esc(t.t)}</b><small>${esc(t.a)}</small></div><div class="eq"><i></i><i></i><i></i></div></div>`).join('');
+    listCount=tracks.length;
+    return;
+  }
+  const rows=list.children;
+  for(let i=0;i<rows.length;i++){
+    const want=(i===idx);
+    if(rows[i].classList.contains('cur')!==want)rows[i].classList.toggle('cur',want);
+  }
 }
 $('list').onclick=e=>{
   const r=e.target.closest('.it');if(!r)return;
