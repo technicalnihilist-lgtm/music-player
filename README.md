@@ -76,6 +76,10 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Changelog
 
+### 1.9 — settings writes coalesced
+
+- A slider fires `input` continuously during a drag, and every one of those events serialised the whole settings object and wrote it to `localStorage` synchronously on the main thread. Slider writes are now coalesced into at most one every 200 ms, with a pending write flushed on `pagehide` and when the page is hidden, so nothing is lost. A 12-event drag now performs one write instead of twelve; the Motion switch, the drift toggle and *Reset defaults* still write immediately.
+
 ### 1.8 — one box read per tilt gesture
 
 - `touchTilt()` read the artwork's `getBoundingClientRect()` on every `touchmove`, forcing a synchronous layout on each frame of the drag; the box is now measured once at `touchstart` and reused for the rest of the gesture, dropping the layout reads per gesture from one per move to one.

@@ -21,8 +21,10 @@ the symptom is. Do not add "refactor everything" style entries.
 - [x] 4. `touchTilt()` calls `getBoundingClientRect()` on every `touchmove`. Measure once at
   `touchstart` and reuse it for the gesture. *(1.8)* — the cached box is dropped on touch end,
   scroll, resize and rotation, so a card that moves under the finger is still measured correctly.
-- [ ] 5. Settings are written to `localStorage` on every slider `input` event, including during a
-  drag. Debounce the write to ~200 ms.
+- [x] 5. Settings are written to `localStorage` on every slider `input` event, including during a
+  drag. Debounce the write to ~200 ms. *(1.9)* — discrete toggles (motion, drift, reset) still
+  write immediately, and a pending write is flushed on `pagehide` and on hide, so a drag that ends
+  with the app being backgrounded still persists.
 - [ ] 6. The blob animation keeps running while the player is collapsed to the bubble and while the
   page is hidden. Pause it in both states.
 - [ ] 7. `paint()` writes nine CSS custom properties every frame, even when the value is unchanged.
