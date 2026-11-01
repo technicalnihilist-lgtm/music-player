@@ -76,6 +76,16 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Changelog
 
+### 1.5 — playlist rendering
+
+- The playlist rebuilt its entire markup on every track change. It now reuses the existing rows
+  and only moves the highlight, so switching tracks no longer recreates the list, drops scroll
+  position or re-runs the equaliser animation from scratch. Adding songs still rebuilds.
+- Repository housekeeping: the packaged page (`android/app/src/main/assets/index.html`) and the
+  manifest had drifted out of sync with `source/index.html`; both are now identical and the version
+  in the manifest matches the released APK again.
+- The signing key is now committed, so every future build stays installable over the previous one.
+
 ### 1.4 — touch fix
 
 - **Taps no longer miss.** The 3D tilt was applied through a `perspective` on `<body>`, which turned
@@ -155,7 +165,7 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Notes
 
-- Package name: `com.glassplayer.app` · version 1.4 · minSdk 24 · targetSdk 34
+- Package name: `com.glassplayer.app` · version 1.5 · minSdk 24 · targetSdk 34
 - The app requests no permissions and has no network access; audio is read only through the
   system file picker you invoke yourself.
 - `source/index.html` also runs in any browser if you want to try the UI without installing.
