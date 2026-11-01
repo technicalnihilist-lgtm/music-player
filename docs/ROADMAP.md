@@ -1,0 +1,75 @@
+# Improvement backlog
+
+One item per scheduled run, top to bottom. Every item must leave the **interface identical** —
+no changes to layout, colour, spacing, type, copy, animation timing or interaction model. Only
+correctness, performance, robustness, accessibility and code quality.
+
+Rules for adding items: only add things you have actually observed to be a problem, and say what
+the symptom is. Do not add "refactor everything" style entries.
+
+## Performance and fluidity
+
+- [x] 1. Playlist rebuilt its whole innerHTML on every track change — reuse the rows and only move
+  the `cur` class. *(1.5)*
+- [ ] 2. `timeupdate` writes four DOM values on every audio tick (~4/s). Skip the write when the
+  rounded value has not changed.
+- [ ] 3. `restart()` forces a synchronous reflow with `void el.offsetWidth` on every call. Batch
+  the class toggle into a `requestAnimationFrame` instead.
+- [ ] 4. `touchTilt()` calls `getBoundingClientRect()` on every `touchmove`. Measure once at
+  `touchstart` and reuse it for the gesture.
+- [ ] 5. Settings are written to `localStorage` on every slider `input` event, including during a
+  drag. Debounce the write to ~200 ms.
+- [ ] 6. The blob animation keeps running while the player is collapsed to the bubble and while the
+  page is hidden. Pause it in both states.
+- [ ] 7. `paint()` writes nine CSS custom properties every frame, even when the value is unchanged.
+  Compare against the previous value and skip identical writes.
+- [ ] 8. `load()` re-queries the same DOM nodes on every call. Hoist the lookups into a single
+  element map created once.
+- [ ] 9. Audit for properties that trigger layout in hot paths (width/height/top/left) and replace
+  with transforms where the visual result is identical.
+
+## Robustness
+
+- [ ] 10. `au.duration` can be `Infinity` or `NaN` for some files; every read site must guard it.
+- [ ] 11. `au.play()` rejections are swallowed by `.catch(()=>{})`. Surface a non-intrusive state so
+  the user knows playback was blocked rather than broken.
+- [ ] 12. The "skip unplayable track" path can walk the whole playlist on a run of bad files. Cap
+  the attempts and stop with a clear message.
+- [ ] 13. A cancelled or empty file-picker result should leave the playlist untouched (verify, and
+  fix if not).
+- [ ] 14. Track hues from the golden-angle step can exceed 359 on long lists; clamp to 0–359.
+- [ ] 15. `seek` input should be clamped to `[0, duration]` before assignment.
+- [ ] 16. `deviceorientation` can deliver null `beta`/`gamma`; the guard exists but confirm it also
+  handles the first event having only `alpha`.
+- [ ] 17. Rapid taps on a playlist row can call `load()` twice for the same track; make it
+  idempotent.
+- [ ] 18. Rotation/resize can leave the card mid-tilt; re-measure and reset the tilt target.
+
+## Memory and battery
+
+- [ ] 19. Object URLs from the file picker are never revoked. Revoke a track's URL when the page is
+  torn down, and on `pagehide`.
+- [ ] 20. The `requestAnimationFrame` loop should stop when the document is hidden and restart on
+  visibility.
+- [ ] 21. Media session metadata is left behind when the player closes; clear it.
+
+## Accessibility
+
+- [ ] 22. Announce track changes with `aria-live="polite"` on the title block.
+- [ ] 23. Give every range input an `aria-valuetext` describing its unit.
+- [ ] 24. Ensure keyboard focus is visible on buttons (currently only `:active` is styled).
+- [ ] 25. Give the playlist `role="list"` and its rows `role="listitem"`.
+
+## Code quality
+
+- [ ] 26. `synth()` builds a WAV for demo tracks that no real code path uses; confirm it is
+  unreachable and remove it, or document why it stays.
+- [ ] 27. Add a short architecture comment at the top of the script (state, render, audio, depth).
+- [ ] 28. Unify the error strings ("Can't play this file", "Skipping…") into one helper.
+
+## Android shell (`android/app/src/main/java/.../MainActivity.java`)
+
+- [ ] 29. Request and abandon audio focus so other apps duck correctly.
+- [ ] 30. Handle `onTrimMemory` by releasing the WebView's cache.
+- [ ] 31. Guard against a WebView that fails to instantiate, with a plain-text fallback screen.
+- [ ] 32. Confirm the file chooser returns `null` cleanly when the user backs out.
