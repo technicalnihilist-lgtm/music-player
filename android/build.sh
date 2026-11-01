@@ -13,6 +13,8 @@
 set -e
 
 : "${ANDROID_SDK_ROOT:?set ANDROID_SDK_ROOT to your Android SDK path}"
+: "${JAVA_HOME:?set JAVA_HOME to a JDK 17 install}"
+export PATH="$JAVA_HOME/bin:$PATH"
 BT="$ANDROID_SDK_ROOT/build-tools/34.0.0"
 PLAT="$ANDROID_SDK_ROOT/platforms/android-34/android.jar"
 PROJ="$(cd "$(dirname "$0")" && pwd)/app"
@@ -39,7 +41,7 @@ javac -nowarn -source 8 -target 8 -classpath "$PLAT" -d "$OUT/classes" \
   $(find "$PROJ/src/main/java" "$OUT/gen" -name '*.java')
 
 echo "== d8 =="
-"$BT/d8" --lib "$PLAT" --min-api 24 --output "$OUT" $(find "$OUT/classes" -name '*.class')
+"$BT/d8" ${D8_JOPTS:-} --lib "$PLAT" --min-api 24 --output "$OUT" $(find "$OUT/classes" -name '*.class')
 
 echo "== package dex =="
 ( cd "$OUT" && zip -q app-unsigned.apk classes.dex )
