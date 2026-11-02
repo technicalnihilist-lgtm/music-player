@@ -25,8 +25,11 @@ the symptom is. Do not add "refactor everything" style entries.
   drag. Debounce the write to ~200 ms. *(1.9)* — discrete toggles (motion, drift, reset) still
   write immediately, and a pending write is flushed on `pagehide` and on hide, so a drag that ends
   with the app being backgrounded still persists.
-- [ ] 6. The blob animation keeps running while the player is collapsed to the bubble and while the
-  page is hidden. Pause it in both states.
+- [x] 6. The blob animation keeps running while the player is collapsed to the bubble and while the
+  page is hidden. Pause it in both states. *(2.0)* — both states now drive a `paused` class on the
+  blob field, which sets `animation-play-state` on the three blobs. The loop freezes in place, so
+  the frame on screen is unchanged; the collapse animation itself still runs, and reopening or
+  returning to the tab resumes exactly where it stopped.
 - [ ] 7. `paint()` writes nine CSS custom properties every frame, even when the value is unchanged.
   Compare against the previous value and skip identical writes.
 - [ ] 8. `load()` re-queries the same DOM nodes on every call. Hoist the lookups into a single

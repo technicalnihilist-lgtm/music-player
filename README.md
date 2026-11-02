@@ -76,6 +76,10 @@ To change the UI, edit `source/index.html`, copy it to
 
 ## Changelog
 
+### 2.0 — the backdrop pauses when nobody is looking
+
+- The three blurred blobs behind the glass kept their 14-second float loop compositing while the player was collapsed to the bubble and while the app was in the background, where none of it is on screen. Both states now set `animation-play-state: paused` on the blob field, so the loop freezes in place rather than disappearing — the frame you see is identical, and the collapse animation, reopening and returning to the app all behave exactly as before.
+
 ### 1.9 — settings writes coalesced
 
 - A slider fires `input` continuously during a drag, and every one of those events serialised the whole settings object and wrote it to `localStorage` synchronously on the main thread. Slider writes are now coalesced into at most one every 200 ms, with a pending write flushed on `pagehide` and when the page is hidden, so nothing is lost. A 12-event drag now performs one write instead of twelve; the Motion switch, the drift toggle and *Reset defaults* still write immediately.
